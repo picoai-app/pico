@@ -319,11 +319,34 @@
 <section class="waitlist" id="waitlist">
   <h2>Get early access</h2>
   <p>Join the waitlist for early-bird pricing and be the first to try PICO.</p>
-  <form class="waitlist-form" action="https://formspree.io/f/xzdyrawy" method="POST" onsubmit="setTimeout(()=>{this.innerHTML='<p style=\'color:#4ade80;font-size:16px;padding:14px 0\'>You\'re on the list! We\'ll notify you at launch.</p>'},100);">
+  <form class="waitlist-form" id="waitlist-form">
     <input type="email" name="email" placeholder="your@email.com" required>
-    <input type="hidden" name="_subject" value="New PICO waitlist signup!">
     <button type="submit">Join Waitlist</button>
   </form>
+  <script>
+  document.getElementById('waitlist-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var form = this;
+    var btn = form.querySelector('button');
+    btn.textContent = 'Joining...';
+    btn.disabled = true;
+    fetch('https://formspree.io/f/xzdyrawy', {
+      method: 'POST',
+      body: new FormData(form),
+      headers: {'Accept': 'application/json'}
+    }).then(function(r) {
+      if (r.ok) {
+        form.innerHTML = '<p style="color:#4ade80;font-size:16px;padding:14px 0">You\'re on the list! We\'ll notify you at launch.</p>';
+      } else {
+        btn.textContent = 'Try again';
+        btn.disabled = false;
+      }
+    }).catch(function() {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    });
+  });
+  </script>
   <p class="waitlist-count">Early-bird pricing: $39 Personal / $79 Pro</p>
 </section>
 
