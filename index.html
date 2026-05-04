@@ -7,441 +7,505 @@
 <meta name="description" content="Real-time transcription and AI suggestions that run entirely on your machine. No cloud, no subscriptions, no account. Works in airplane mode.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --bg: #09090b;
-  --surface: #18181b;
-  --border: rgba(255,255,255,0.06);
-  --text: #fafafa;
-  --muted: #a1a1aa;
-  --dim: #52525b;
-  --accent: #a78bfa;
-  --accent-deep: #7c3aed;
-  --accent-glow: rgba(167,139,250,0.25);
-  --green: #4ade80;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050507;--surface:#0d0d12;--surface2:#141419;--border:rgba(255,255,255,0.05);
+  --text:#f0f0f5;--muted:#8888a0;--dim:#555568;
+  --violet:#a78bfa;--violet-deep:#7c3aed;--violet-glow:rgba(139,92,246,0.35);
+  --blue:#60a5fa;--cyan:#22d3ee;--green:#4ade80;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+/* ===== GRAIN TEXTURE ===== */
+body::after{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  opacity:0.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:128px;
 }
+
+/* ===== DOT GRID ===== */
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(ellipse 60% 50% at 50% 0%,black 30%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 60% 50% at 50% 0%,black 30%,transparent 100%);
+}
+
+/* ===== MESH GRADIENT ORBS ===== */
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;top:-200px;left:30%;background:rgba(124,58,237,0.12);animation:orbit1 20s ease-in-out infinite alternate}
+.orb-2{width:500px;height:500px;top:100px;right:-100px;background:rgba(96,165,250,0.08);animation:orbit2 25s ease-in-out infinite alternate}
+.orb-3{width:400px;height:400px;bottom:200px;left:-100px;background:rgba(34,211,238,0.06);animation:orbit3 22s ease-in-out infinite alternate}
+@keyframes orbit1{to{transform:translate(80px,60px) scale(1.15)}}
+@keyframes orbit2{to{transform:translate(-60px,80px) scale(0.9)}}
+@keyframes orbit3{to{transform:translate(60px,-40px) scale(1.1)}}
 
 /* ===== ANIMATIONS ===== */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.hero-anim { opacity: 0; animation: fadeUp 0.6s ease forwards; }
-.hero-anim:nth-child(2) { animation-delay: 0.1s; }
-.hero-anim:nth-child(3) { animation-delay: 0.2s; }
-.hero-anim:nth-child(4) { animation-delay: 0.3s; }
-.hero-anim:nth-child(5) { animation-delay: 0.4s; }
-
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1);
-}
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.anim{opacity:0;animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards}
+.anim-d1{animation-delay:0.1s}.anim-d2{animation-delay:0.2s}.anim-d3{animation-delay:0.3s}
+.anim-d4{animation-delay:0.4s}.anim-d5{animation-delay:0.5s}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1)}
+.reveal.vis{opacity:1;transform:none}
 
 /* ===== NAV ===== */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  padding: 14px 40px;
-  background: rgba(9,9,11,0.8);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 32px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(5,5,7,0.6);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-bottom:1px solid var(--border);
 }
-.logo { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
-.logo span { color: var(--accent); }
-.nav-links { display: flex; align-items: center; gap: 32px; }
-.nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-.nav-links a:hover { color: var(--text); }
-.nav-cta {
-  padding: 8px 20px; background: var(--accent); color: #fff; border-radius: 8px;
-  font-weight: 600; font-size: 13px; text-decoration: none; transition: all 0.2s;
+.logo{font-size:22px;font-weight:900;letter-spacing:-0.04em;z-index:101}
+.logo em{font-style:normal;background:linear-gradient(135deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-r{display:flex;align-items:center;gap:28px}
+.nav-r a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color 0.2s}
+.nav-r a:hover{color:var(--text)}
+.nav-btn{
+  padding:8px 20px;border-radius:8px;font-weight:600;font-size:13px;color:#fff;
+  background:linear-gradient(135deg,var(--violet),var(--violet-deep));
+  text-decoration:none;transition:all 0.25s;border:1px solid rgba(167,139,250,0.3);
 }
-.nav-cta:hover { box-shadow: 0 4px 16px var(--accent-glow); color: #fff; }
+.nav-btn:hover{box-shadow:0 0 20px var(--violet-glow);transform:translateY(-1px)}
 
 /* ===== HERO ===== */
-.hero {
-  padding: 160px 40px 80px; text-align: center; max-width: 800px; margin: 0 auto;
-  position: relative;
+.hero{
+  position:relative;z-index:1;
+  padding:180px 24px 100px;text-align:center;max-width:860px;margin:0 auto;
 }
-.hero::before {
-  content: ''; position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-  width: 700px; height: 500px;
-  background: radial-gradient(ellipse, rgba(167,139,250,0.12) 0%, rgba(124,58,237,0.06) 40%, transparent 70%);
-  pointer-events: none; animation: heroGlow 12s ease-in-out infinite alternate;
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 18px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--green);
+  background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.12);
+  margin-bottom:32px;
 }
-@keyframes heroGlow {
-  0% { opacity: 0.8; transform: translateX(-50%) scale(1); }
-  100% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+.pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+h1{
+  font-size:72px;font-weight:900;line-height:1.0;letter-spacing:-0.05em;
+  margin-bottom:24px;
 }
-.badge {
-  display: inline-block; padding: 6px 16px; background: rgba(74,222,128,0.08);
-  border: 1px solid rgba(74,222,128,0.15); border-radius: 20px; font-size: 11px;
-  color: var(--green); font-weight: 600; margin-bottom: 28px; letter-spacing: 0.08em;
-  text-transform: uppercase;
+h1 .grad{
+  background:linear-gradient(135deg,var(--violet) 0%,var(--blue) 50%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-h1 {
-  font-size: 56px; font-weight: 800; line-height: 1.08; letter-spacing: -0.04em;
-  margin-bottom: 20px;
+.hero-sub{
+  font-size:19px;color:var(--muted);max-width:500px;margin:0 auto 48px;line-height:1.65;font-weight:400;
 }
-.hero-sub {
-  font-size: 19px; color: var(--muted); max-width: 520px; margin: 0 auto 40px; line-height: 1.55;
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 40px;font-size:16px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--violet),var(--violet-deep));
+  border:1px solid rgba(167,139,250,0.4);border-radius:14px;
+  text-decoration:none;transition:all 0.3s;position:relative;overflow:hidden;
+  box-shadow:0 0 40px var(--violet-glow),0 0 80px rgba(124,58,237,0.15);
 }
-.hero-cta {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 15px 36px; background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-  color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  box-shadow: 0 4px 24px var(--accent-glow);
+.hero-cta:hover{transform:translateY(-3px);box-shadow:0 0 50px var(--violet-glow),0 0 100px rgba(124,58,237,0.2)}
+.hero-cta:active{transform:translateY(0)}
+.hero-cta::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.1) 50%,transparent 60%);
+  transform:translateX(-100%);transition:transform 0.5s;
 }
-.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
-.hero-cta:active { transform: translateY(1px); }
-.hero-platform { font-size: 13px; color: var(--dim); margin-top: 16px; }
-.hero-trust {
-  display: flex; justify-content: center; gap: 24px; margin-top: 32px; flex-wrap: wrap;
+.hero-cta:hover::after{transform:translateX(100%)}
+.hero-meta{font-size:13px;color:var(--dim);margin-top:20px;font-weight:500}
+.trust-row{
+  display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap;
 }
-.hero-trust span {
-  font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 6px;
+.trust-item{
+  display:flex;align-items:center;gap:7px;font-size:12px;color:var(--dim);font-weight:500;
+  padding:6px 14px;border-radius:100px;background:rgba(255,255,255,0.03);border:1px solid var(--border);
 }
-.hero-trust span::before { content: '\2713'; color: var(--green); font-weight: 700; font-size: 11px; }
+.trust-item::before{content:'\2713';color:var(--green);font-weight:800;font-size:10px}
 
-/* ===== DEMO ===== */
-.demo {
-  max-width: 900px; margin: 0 auto 120px; padding: 0 40px;
+/* ===== DEMO FRAME ===== */
+.demo-wrap{max-width:920px;margin:0 auto 140px;padding:0 24px;position:relative;z-index:1}
+.demo-chrome{
+  background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:16px;
+  overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.04);
 }
-.demo-frame {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-  overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center;
-  justify-content: center; position: relative;
+.demo-dots{display:flex;gap:6px;padding:14px 18px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border)}
+.demo-dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.demo-body{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative}
+.play-btn{
+  width:72px;height:72px;border-radius:50%;cursor:pointer;transition:all 0.3s;
+  background:linear-gradient(135deg,var(--violet),var(--violet-deep));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 40px var(--violet-glow);
 }
-.demo-frame .play {
-  width: 72px; height: 72px; background: var(--accent); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  transition: all 0.3s; box-shadow: 0 8px 30px var(--accent-glow);
+.play-btn:hover{transform:scale(1.1);box-shadow:0 0 60px var(--violet-glow)}
+.play-btn::after{content:'';border:14px solid transparent;border-left:22px solid #fff;margin-left:6px}
+.demo-label{text-align:center;color:var(--dim);font-size:13px;margin-top:16px;font-weight:500}
+
+/* ===== HOW IT WORKS ===== */
+.how{max-width:800px;margin:0 auto 140px;padding:0 24px;position:relative;z-index:1}
+.how h2{font-size:36px;font-weight:800;text-align:center;margin-bottom:12px;letter-spacing:-0.03em}
+.how .sub{text-align:center;color:var(--muted);font-size:15px;margin-bottom:56px}
+.steps{display:flex;flex-direction:column;gap:0;position:relative}
+.steps::before{content:'';position:absolute;left:23px;top:24px;bottom:24px;width:1px;background:linear-gradient(to bottom,var(--violet),var(--blue),transparent)}
+.step{display:flex;gap:24px;padding:24px 0}
+.step-num{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:var(--violet);
+  background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);
+  position:relative;z-index:1;
 }
-.demo-frame .play:hover { transform: scale(1.08); }
-.demo-frame .play::after { content: ''; border: 16px solid transparent; border-left: 24px solid #fff; margin-left: 6px; }
-.demo-label { text-align: center; color: var(--dim); font-size: 13px; margin-top: 14px; }
+.step-text h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.step-text p{font-size:14px;color:var(--muted);line-height:1.6}
 
 /* ===== FEATURES ===== */
-.features {
-  max-width: 1000px; margin: 0 auto 120px; padding: 0 40px;
+.features{max-width:1060px;margin:0 auto 140px;padding:0 24px;position:relative;z-index:1}
+.features h2{font-size:36px;font-weight:800;text-align:center;margin-bottom:12px;letter-spacing:-0.03em}
+.features .sub{text-align:center;color:var(--muted);font-size:15px;margin-bottom:56px}
+.f-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.f-card{
+  background:rgba(20,20,25,0.6);
+  border:1px solid var(--border);border-radius:16px;padding:36px 28px;
+  transition:all 0.35s;position:relative;overflow:hidden;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.feature-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 32px 28px; transition: all 0.25s;
+.f-card::before{
+  content:'';position:absolute;inset:0;border-radius:16px;padding:1px;
+  background:linear-gradient(135deg,rgba(167,139,250,0.15),transparent 50%,rgba(96,165,250,0.1));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;transition:opacity 0.35s;
 }
-.feature-card:hover { border-color: rgba(167,139,250,0.2); transform: translateY(-4px); }
-.feature-icon { font-size: 28px; margin-bottom: 16px; display: block; }
-.feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.01em; }
-.feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.f-card:hover::before{opacity:1}
+.f-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.f-icon{
+  width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(96,165,250,0.08));
+  border:1px solid rgba(167,139,250,0.1);
+}
+.f-card h3{font-size:16px;font-weight:700;margin-bottom:8px;letter-spacing:-0.01em}
+.f-card p{font-size:14px;color:var(--muted);line-height:1.65}
 
 /* ===== PRIVACY ===== */
-.privacy {
-  max-width: 800px; margin: 0 auto 120px; padding: 56px 40px; text-align: center;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-  position: relative; overflow: hidden;
+.privacy{
+  max-width:860px;margin:0 auto 140px;padding:64px 48px;text-align:center;
+  position:relative;z-index:1;border-radius:24px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(20,20,30,0.9),rgba(13,13,18,0.9));
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 40px 100px rgba(0,0,0,0.4);
 }
-.privacy::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at top right, rgba(74,222,128,0.06), transparent 60%);
+.privacy::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at top right,rgba(74,222,128,0.07),transparent 60%),
+             radial-gradient(ellipse at bottom left,rgba(167,139,250,0.05),transparent 60%);
 }
-.privacy h2 { font-size: 30px; font-weight: 800; margin-bottom: 14px; position: relative; letter-spacing: -0.02em; }
-.privacy .privacy-desc { color: var(--muted); font-size: 15px; max-width: 480px; margin: 0 auto 32px; position: relative; line-height: 1.6; }
-.privacy-checks {
-  display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; position: relative;
+.privacy h2{font-size:34px;font-weight:800;margin-bottom:16px;position:relative;letter-spacing:-0.03em;line-height:1.15}
+.privacy .desc{color:var(--muted);font-size:15px;max-width:500px;margin:0 auto 36px;position:relative;line-height:1.65}
+.checks{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;position:relative}
+.chk{
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+  color:var(--green);padding:8px 16px;border-radius:100px;
+  background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.1);
 }
-.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--green); font-weight: 500; }
-.check::before { content: '\2713'; font-weight: 700; }
+.chk::before{content:'\2713';font-weight:800}
 
 /* ===== PRICING ===== */
-.pricing { max-width: 480px; margin: 0 auto 40px; padding: 0 40px; text-align: center; }
-.pricing-header { margin-bottom: 48px; }
-.pricing-header h2 { font-size: 30px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.02em; }
-.pricing-header p { color: var(--muted); font-size: 15px; }
-.price-card {
-  background: var(--surface); border: 1px solid rgba(167,139,250,0.2); border-radius: 16px;
-  padding: 40px 32px; box-shadow: 0 0 40px var(--accent-glow);
+.pricing{max-width:440px;margin:0 auto 60px;padding:0 24px;text-align:center;position:relative;z-index:1}
+.pricing h2{font-size:36px;font-weight:800;margin-bottom:10px;letter-spacing:-0.03em}
+.pricing .sub{color:var(--muted);font-size:15px;margin-bottom:48px}
+.p-card{
+  background:rgba(20,20,25,0.8);border-radius:20px;padding:44px 36px;
+  position:relative;overflow:hidden;
+  border:1px solid rgba(167,139,250,0.2);
+  box-shadow:0 0 60px rgba(139,92,246,0.15),0 40px 80px rgba(0,0,0,0.3);
 }
-.price-label { font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 8px; }
-.price-amount { font-size: 48px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.03em; }
-.price-period { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
-.price-features { list-style: none; text-align: left; margin-bottom: 32px; }
-.price-features li { padding: 10px 0; font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--border); }
-.price-features li:last-child { border-bottom: none; }
-.price-features li::before { content: '\2713'; color: var(--green); margin-right: 10px; font-weight: 700; }
-.price-btn {
-  display: block; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px;
-  font-weight: 600; text-decoration: none; text-align: center; transition: all 0.2s;
-  background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; border: none; cursor: pointer;
-  box-shadow: 0 4px 16px var(--accent-glow);
+.p-card::before{
+  content:'';position:absolute;top:-1px;left:20%;right:20%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--violet),var(--blue),transparent);
 }
-.price-btn:hover { box-shadow: 0 8px 24px var(--accent-glow); transform: translateY(-2px); }
-.price-btn:active { transform: translateY(1px); }
-.price-compare {
-  font-size: 13px; color: var(--dim); margin-top: 20px; font-style: italic;
+.p-label{font-size:12px;color:var(--violet);text-transform:uppercase;letter-spacing:0.12em;font-weight:700;margin-bottom:12px}
+.p-price{font-size:56px;font-weight:900;letter-spacing:-0.04em;margin-bottom:2px}
+.p-period{font-size:14px;color:var(--muted);margin-bottom:32px}
+.p-list{list-style:none;text-align:left;margin-bottom:36px}
+.p-list li{padding:11px 0;font-size:14px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.p-list li:last-child{border-bottom:none}
+.p-list li::before{content:'\2713';color:var(--green);font-weight:800;font-size:12px}
+.p-btn{
+  display:block;width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;
+  color:#fff;border:none;cursor:pointer;text-decoration:none;text-align:center;
+  background:linear-gradient(135deg,var(--violet),var(--violet-deep));
+  box-shadow:0 4px 24px var(--violet-glow);transition:all 0.25s;
 }
+.p-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px var(--violet-glow)}
+.p-compare{font-size:13px;color:var(--dim);margin-top:24px;font-style:italic}
 
 /* ===== DOWNLOAD ===== */
-.download {
-  max-width: 600px; margin: 80px auto 120px; padding: 56px 40px; text-align: center;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+.dl{
+  max-width:580px;margin:80px auto 120px;padding:52px 40px;text-align:center;
+  background:rgba(20,20,25,0.7);border:1px solid var(--border);border-radius:20px;
+  position:relative;z-index:1;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.download h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
-.download p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-.download-btn {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 14px 32px; background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-  color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600;
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  box-shadow: 0 4px 20px var(--accent-glow);
+.dl h2{font-size:28px;font-weight:800;margin-bottom:10px;letter-spacing:-0.02em}
+.dl>p{color:var(--muted);font-size:14px;margin-bottom:32px}
+.dl-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:15px 36px;font-size:15px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--violet),var(--violet-deep));
+  border:1px solid rgba(167,139,250,0.3);border-radius:14px;
+  text-decoration:none;transition:all 0.25s;
+  box-shadow:0 0 30px var(--violet-glow);
 }
-.download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
-.download-alt { font-size: 13px; color: var(--dim); margin-top: 14px; }
-.download-alt a { color: var(--muted); text-decoration: underline; }
-.download-steps {
-  display: none; text-align: left; margin-top: 28px; padding-top: 24px;
-  border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 2;
-}
-.download-steps.show { display: block; }
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 0 50px var(--violet-glow)}
+.dl-alt{font-size:13px;color:var(--dim);margin-top:16px}
+.dl-alt a{color:var(--muted);text-decoration:underline}
+.dl-steps{display:none;text-align:left;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);line-height:2.2}
+.dl-steps.show{display:block}
 
-/* ===== WAITLIST ===== */
-.waitlist {
-  max-width: 520px; margin: 0 auto 120px; padding: 0 40px; text-align: center;
+/* ===== EMAIL ===== */
+.email{max-width:480px;margin:0 auto 120px;padding:0 24px;text-align:center;position:relative;z-index:1}
+.email h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.email p{color:var(--dim);font-size:13px;margin-bottom:20px}
+.email-form{display:flex;gap:8px}
+.email-form input{
+  flex:1;padding:13px 16px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:inherit;
+  transition:border-color 0.2s;
 }
-.waitlist h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-.waitlist p { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
-.waitlist-form { display: flex; gap: 10px; }
-.waitlist-form input {
-  flex: 1; padding: 13px 16px; background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: 10px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+.email-form input:focus{border-color:var(--violet)}
+.email-form input::placeholder{color:var(--dim)}
+.email-form button{
+  padding:13px 22px;background:var(--violet);color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+  font-family:inherit;transition:all 0.2s;
 }
-.waitlist-form input:focus { border-color: var(--accent); }
-.waitlist-form input::placeholder { color: var(--dim); }
-.waitlist-form button {
-  padding: 13px 24px; background: var(--accent); color: #fff; border: none;
-  border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit;
-  transition: all 0.2s;
-}
-.waitlist-form button:hover { box-shadow: 0 4px 16px var(--accent-glow); }
+.email-form button:hover{box-shadow:0 4px 16px var(--violet-glow)}
 
 /* ===== FOOTER ===== */
-footer {
-  padding: 40px; text-align: center; border-top: 1px solid var(--border);
-  font-size: 12px; color: var(--dim);
+footer{
+  padding:40px 24px;text-align:center;border-top:1px solid var(--border);
+  font-size:12px;color:var(--dim);position:relative;z-index:1;
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
-  .feature-grid { grid-template-columns: 1fr; }
-  h1 { font-size: 44px; }
-  .hero { padding: 140px 32px 64px; }
+@media(max-width:1024px){
+  h1{font-size:52px}
+  .f-grid{grid-template-columns:1fr 1fr;gap:14px}
 }
-@media (max-width: 768px) {
-  nav { padding: 12px 20px; }
-  .nav-links { gap: 20px; }
-  .nav-links a { font-size: 13px; }
-  h1 { font-size: 34px; }
-  .hero { padding: 120px 20px 48px; }
-  .hero-sub { font-size: 16px; }
-  .hero-cta { padding: 16px 28px; font-size: 15px; width: 100%; justify-content: center; }
-  .hero::before { width: 350px; height: 350px; }
-  .hero-trust { gap: 16px; }
-  .demo { padding: 0 20px; margin-bottom: 80px; }
-  .features { padding: 0 20px; margin-bottom: 80px; }
-  .feature-card { padding: 24px 20px; }
-  .privacy { margin: 0 20px 80px; padding: 40px 24px; border-radius: 16px; }
-  .privacy h2 { font-size: 24px; }
-  .privacy-checks { flex-direction: column; align-items: center; gap: 10px; }
-  .pricing { padding: 0 20px; margin-bottom: 32px; }
-  .pricing-header h2 { font-size: 24px; }
-  .price-amount { font-size: 40px; }
-  .download { margin: 60px 20px 80px; padding: 40px 24px; border-radius: 16px; }
-  .waitlist { padding: 0 20px; margin-bottom: 80px; }
-  .waitlist-form { flex-direction: column; }
-  .waitlist-form input, .waitlist-form button { min-height: 48px; font-size: 15px; }
+@media(max-width:768px){
+  nav{padding:12px 20px}
+  .nav-r{gap:16px}
+  .nav-r a:not(.nav-btn){font-size:12px}
+  h1{font-size:38px}
+  .hero{padding:140px 20px 60px}
+  .hero-sub{font-size:16px;margin-bottom:36px}
+  .hero-cta{padding:16px 32px;font-size:15px;width:100%;justify-content:center}
+  .trust-row{gap:10px}
+  .trust-item{font-size:11px;padding:5px 10px}
+  .demo-wrap{padding:0 20px;margin-bottom:100px}
+  .how,.features{padding:0 20px;margin-bottom:100px}
+  .how h2,.features h2{font-size:28px}
+  .f-grid{grid-template-columns:1fr;gap:12px}
+  .f-card{padding:28px 22px}
+  .privacy{margin:0 20px 100px;padding:44px 28px;border-radius:18px}
+  .privacy h2{font-size:26px}
+  .checks{gap:10px}
+  .chk{font-size:12px;padding:6px 12px}
+  .pricing{padding:0 20px;margin-bottom:40px}
+  .pricing h2{font-size:28px}
+  .p-price{font-size:44px}
+  .dl{margin:60px 20px 100px;padding:40px 24px}
+  .email{padding:0 20px;margin-bottom:80px}
+  .email-form{flex-direction:column}
+  .email-form input,.email-form button{min-height:48px}
 }
-@media (max-width: 480px) {
-  h1 { font-size: 28px; }
-  .hero { padding: 110px 16px 40px; }
-  .nav-links a:not(.nav-cta) { display: none; }
-  .features { padding: 0 16px; }
-  .privacy, .download { margin-left: 16px; margin-right: 16px; }
-  .pricing { padding: 0 16px; }
-  .waitlist { padding: 0 16px; }
+@media(max-width:480px){
+  h1{font-size:30px}
+  .hero{padding:120px 16px 48px}
+  .nav-r a:not(.nav-btn){display:none}
+  .how,.features{padding:0 16px}
+  .privacy,.dl{margin-left:16px;margin-right:16px}
+  .pricing,.email{padding:0 16px}
+  .steps::before{left:23px}
 }
 </style>
 </head>
 <body>
 
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
 <nav>
-  <div class="logo">PICO<span>.</span></div>
-  <div class="nav-links">
+  <div class="logo">P<em>ICO</em></div>
+  <div class="nav-r">
     <a href="#features">Features</a>
     <a href="#privacy">Privacy</a>
     <a href="#pricing">Pricing</a>
-    <a href="#download" class="nav-cta">Download</a>
+    <a href="#download" class="nav-btn">Download</a>
   </div>
 </nav>
 
 <section class="hero">
-  <div class="badge hero-anim">100% OFFLINE</div>
-  <h1 class="hero-anim">AI that listens.<br>Nothing leaves your device.</h1>
-  <p class="hero-sub hero-anim">Real-time transcription and AI suggestions that run entirely on your machine. No cloud. No subscriptions. No account.</p>
-  <a href="#download" class="hero-cta hero-anim" id="hero-cta-btn">Download for macOS</a>
-  <p class="hero-platform hero-anim">Built for Apple Silicon. Windows available now.</p>
-  <div class="hero-trust hero-anim">
-    <span>No account required</span>
-    <span>Works in airplane mode</span>
-    <span>macOS &amp; Windows</span>
+  <div class="pill anim">100% Offline</div>
+  <h1 class="anim anim-d1">AI that listens.<br><span class="grad">Nothing leaves your device.</span></h1>
+  <p class="hero-sub anim anim-d2">Real-time transcription and AI-powered suggestions, running entirely on your machine. No cloud. No subscriptions. No account.</p>
+  <a href="#download" class="hero-cta anim anim-d3" id="hero-cta">Download for macOS</a>
+  <p class="hero-meta anim anim-d4">Built for Apple Silicon &middot; Windows available</p>
+  <div class="trust-row anim anim-d5">
+    <span class="trust-item">No account required</span>
+    <span class="trust-item">Works in airplane mode</span>
+    <span class="trust-item">macOS &amp; Windows</span>
   </div>
 </section>
 
-<section class="demo reveal">
-  <div class="demo-frame">
-    <div class="play" onclick="this.parentElement.innerHTML='<div style=\'padding:40px;text-align:center;color:#a1a1aa;font-size:15px\'>Demo video coming soon.</div>'"></div>
+<section class="demo-wrap reveal">
+  <div class="demo-chrome">
+    <div class="demo-dots"><i></i><i></i><i></i></div>
+    <div class="demo-body">
+      <div class="play-btn" onclick="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:#8888a0;font-size:15px;font-weight:500\'>Demo video coming soon</div>'"></div>
+    </div>
   </div>
   <p class="demo-label">See PICO work with WiFi completely off.</p>
 </section>
 
-<section class="features" id="features">
-  <div class="feature-grid">
-    <div class="feature-card reveal">
-      <span class="feature-icon">&#127908;</span>
+<section class="how reveal" id="how">
+  <h2>How it works</h2>
+  <p class="sub">From download to first conversation in under a minute.</p>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <h3>Download &amp; launch</h3>
+        <p>One file. No installer, no sign-up. PICO auto-downloads its AI engine on first launch.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <h3>Start talking</h3>
+        <p>Click the mic or press Ctrl+Space. Your speech is transcribed in real-time, entirely on your device.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <h3>Get AI suggestions</h3>
+        <p>PICO generates talking points, answers, and cheat sheets as you speak. Type follow-up questions anytime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features reveal" id="features">
+  <h2>Built for real conversations</h2>
+  <p class="sub">Everything runs locally. No cloud, no latency, no compromise.</p>
+  <div class="f-grid">
+    <div class="f-card reveal">
+      <div class="f-icon">&#127908;</div>
       <h3>Real-Time Transcription</h3>
-      <p>Speech recognition running locally on your hardware. Words appear as you speak, with zero network traffic. Ever.</p>
+      <p>Speech recognition running locally on your hardware. Words appear as you speak, with zero network traffic.</p>
     </div>
-    <div class="feature-card reveal">
-      <span class="feature-icon">&#10024;</span>
+    <div class="f-card reveal">
+      <div class="f-icon">&#10024;</div>
       <h3>AI-Powered Suggestions</h3>
-      <p>A local AI generates talking points, answers, and cheat sheets in real time. Auto-suggests as you talk, or ask it anything via chat.</p>
+      <p>A local AI generates talking points, answers, and structured responses in real time. Auto-suggests or ask via chat.</p>
     </div>
-    <div class="feature-card reveal">
-      <span class="feature-icon">&#128274;</span>
-      <h3>Fully Private by Design</h3>
-      <p>No cloud. No APIs. No telemetry. Your conversations have nowhere to go. Verify it yourself &mdash; works in airplane mode.</p>
+    <div class="f-card reveal">
+      <div class="f-icon">&#128274;</div>
+      <h3>Private by Architecture</h3>
+      <p>No cloud APIs. No telemetry. No data leaves your machine. Not because we promise &mdash; because there's nowhere for it to go.</p>
     </div>
   </div>
 </section>
 
 <section class="privacy reveal" id="privacy">
   <h2>The only AI assistant that<br>never phones home.</h2>
-  <p class="privacy-desc">Every competitor sends your conversations to the cloud. PICO runs entirely on your machine &mdash; not because we promise, but because there's nowhere for your data to go.</p>
-  <div class="privacy-checks">
-    <div class="check">No cloud APIs</div>
-    <div class="check">No data collection</div>
-    <div class="check">No account required</div>
-    <div class="check">Works in airplane mode</div>
+  <p class="desc">Every competitor sends your conversations to the cloud. PICO runs entirely on your machine &mdash; verified by architecture, not by promises.</p>
+  <div class="checks">
+    <div class="chk">No cloud APIs</div>
+    <div class="chk">No data collection</div>
+    <div class="chk">No account required</div>
+    <div class="chk">Works in airplane mode</div>
   </div>
 </section>
 
 <section class="pricing reveal" id="pricing">
-  <div class="pricing-header">
-    <h2>Pay once. Own it forever.</h2>
-    <p>No subscriptions, because there are no cloud costs.</p>
-  </div>
-  <div class="price-card">
-    <div class="price-label">PICO</div>
-    <div class="price-amount">$49</div>
-    <div class="price-period">one-time purchase</div>
-    <ul class="price-features">
+  <h2>Pay once. Own it forever.</h2>
+  <p class="sub">No subscriptions, because there are no cloud costs.</p>
+  <div class="p-card">
+    <div class="p-label">PICO</div>
+    <div class="p-price">$49</div>
+    <div class="p-period">one-time purchase</div>
+    <ul class="p-list">
       <li>Real-time transcription</li>
       <li>AI-powered suggestions</li>
       <li>General &amp; Coding personas</li>
       <li>Knowledge base (PDF upload)</li>
       <li>Session history &amp; export</li>
-      <li>All future updates</li>
+      <li>All future updates included</li>
     </ul>
-    <a href="#download" class="price-btn">Download PICO</a>
+    <a href="#download" class="p-btn">Download PICO</a>
   </div>
-  <p class="price-compare">Otter.ai costs $199/year. PICO costs $49 once.</p>
+  <p class="p-compare">Otter.ai costs $199/year. PICO costs $49 once.</p>
 </section>
 
-<section class="download reveal" id="download">
+<section class="dl reveal" id="download">
   <h2>Get PICO</h2>
   <p>Download the latest release for your platform.</p>
-  <a id="download-btn" class="download-btn" href="https://github.com/picoai-app/pico-app/releases/latest">Download for macOS</a>
-  <p class="download-alt" id="download-alt">Also available for <a href="https://github.com/picoai-app/pico-app/releases/latest">Windows</a></p>
-  <div class="download-steps" id="install-steps"></div>
+  <a id="dl-btn" class="dl-btn" href="https://github.com/picoai-app/pico-app/releases/latest">Download for macOS</a>
+  <p class="dl-alt" id="dl-alt">Also available for <a href="https://github.com/picoai-app/pico-app/releases/latest">Windows</a></p>
+  <div class="dl-steps" id="dl-steps"></div>
 </section>
 
-<section class="waitlist reveal">
+<section class="email reveal">
   <h3>Get notified about updates</h3>
-  <p>Optional. We'll only email you for major releases.</p>
-  <form class="waitlist-form" id="waitlist-form">
+  <p>Optional &mdash; major releases only, no spam.</p>
+  <form class="email-form" id="email-form">
     <input type="email" name="email" placeholder="your@email.com" required>
     <button type="submit">Subscribe</button>
   </form>
 </section>
 
-<footer>
-  &copy; 2026 PICO. All rights reserved.
-</footer>
+<footer>&copy; 2026 PICO. All rights reserved.</footer>
 
 <script>
-// Scroll reveal
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-}, { threshold: 0.15 });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('vis');e.target.style.transitionDelay=e.target.dataset.d||'0s'}})},{threshold:0.12}).observe(document.querySelector('.reveal'));
+document.querySelectorAll('.reveal').forEach(function(el,i){
+  new IntersectionObserver(function(es){if(es[0].isIntersecting){es[0].target.classList.add('vis')}},{threshold:0.12}).observe(el);
+});
 
-// OS detection
-(function() {
-  const ua = navigator.userAgent || '';
-  const isWin = /Windows/i.test(ua);
-  const heroBtn = document.getElementById('hero-cta-btn');
-  const dlBtn = document.getElementById('download-btn');
-  const dlAlt = document.getElementById('download-alt');
-  if (isWin) {
-    heroBtn.textContent = 'Download for Windows';
-    dlBtn.textContent = 'Download for Windows';
-    dlAlt.innerHTML = 'Also available for <a href="https://github.com/picoai-app/pico-app/releases/latest">macOS (Apple Silicon)</a>';
+(function(){
+  var ua=navigator.userAgent||'',w=/Windows/i.test(ua);
+  if(w){
+    document.getElementById('hero-cta').textContent='Download for Windows';
+    document.getElementById('dl-btn').textContent='Download for Windows';
+    document.getElementById('dl-alt').innerHTML='Also available for <a href="https://github.com/picoai-app/pico-app/releases/latest">macOS (Apple Silicon)</a>';
   }
 })();
 
-// Download click -> show install steps
-document.getElementById('download-btn').addEventListener('click', function() {
-  var steps = document.getElementById('install-steps');
-  var ua = navigator.userAgent || '';
-  if (/Windows/i.test(ua)) {
-    steps.innerHTML = '<strong>Installation:</strong><br>1. Run PICO.exe<br>2. Windows may warn you — click "More info" then "Run anyway" (one-time)<br>3. PICO opens in your browser and sets up automatically';
-  } else {
-    steps.innerHTML = '<strong>Installation:</strong><br>1. Open the .dmg and drag PICO to Applications<br>2. First launch: right-click → Open (macOS will ask once)<br>3. PICO opens in your browser and sets up automatically';
-  }
-  steps.classList.add('show');
+document.getElementById('dl-btn').addEventListener('click',function(){
+  var s=document.getElementById('dl-steps'),w=/Windows/i.test(navigator.userAgent||'');
+  s.innerHTML=w
+    ?'<strong>Installation:</strong><br>1. Run PICO.exe<br>2. Windows may warn you — click "More info" then "Run anyway" (one-time only)<br>3. PICO opens in your browser and sets up automatically'
+    :'<strong>Installation:</strong><br>1. Open the .dmg and drag PICO to Applications<br>2. First launch: right-click → Open (macOS will ask once)<br>3. PICO opens in your browser and sets up automatically';
+  s.classList.add('show');
 });
 
-// Waitlist form
-document.getElementById('waitlist-form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  var form = this;
-  var btn = form.querySelector('button');
-  btn.textContent = 'Subscribing...';
-  btn.disabled = true;
-  fetch('https://formspree.io/f/xzdyrawy', {
-    method: 'POST', body: new FormData(form), headers: {'Accept': 'application/json'}
-  }).then(function(r) {
-    if (r.ok) {
-      form.innerHTML = '<p style="color:#4ade80;font-size:14px;padding:8px 0">You\'re in! We\'ll email you for major releases only.</p>';
-    } else { btn.textContent = 'Try again'; btn.disabled = false; }
-  }).catch(function() { btn.textContent = 'Try again'; btn.disabled = false; });
+document.getElementById('email-form').addEventListener('submit',function(e){
+  e.preventDefault();var f=this,b=f.querySelector('button');
+  b.textContent='Subscribing...';b.disabled=true;
+  fetch('https://formspree.io/f/xzdyrawy',{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
+  .then(function(r){if(r.ok){f.innerHTML='<p style="color:#4ade80;font-size:14px;padding:8px 0">You\'re in! Major releases only, no spam.</p>'}else{b.textContent='Try again';b.disabled=false}})
+  .catch(function(){b.textContent='Try again';b.disabled=false});
 });
 </script>
-
 </body>
 </html>
